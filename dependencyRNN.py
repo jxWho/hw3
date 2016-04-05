@@ -111,7 +111,7 @@ class DependencyRNN:
                     fn=helperFunction,
                     sequences=wrong_ans,
                     non_sequences=[corr_ans, h_n],
-                    outputs_info=T.as_tensor_variable(np.float64(0.0) )
+                    outputs_info=T.as_tensor_variable(np.asarray(0, theano.config.floatX) )
                     )
             final_result = rr[-1]
 
