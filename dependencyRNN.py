@@ -73,7 +73,7 @@ class DependencyRNN:
 
 
         def helperFunction(x_z, prior_result, x_c, h_n):
-            return prior_result + T.maximum(0, 1 - T.dot(x_c, h_n) + T.dot(x_z, h_n))
+            return prior_result + T.maximum(0.0, 1.0 - T.dot(x_c, h_n) + T.dot(x_z, h_n))
 
         #need to calculate both the input to its parent node and the error at this step
         def recurrence(n, hidden_states, hidden_sums, cost, x, r, p, wrong_ans, corr_ans):
@@ -104,7 +104,8 @@ class DependencyRNN:
             newStates = T.set_subtensor( hidden_states[n], h_n )
 
             #newSum = hidden_sums[ p[n] ] + T.dot(self.Wr[n], h_n)
-            newSum = T.dot(r[n], h_n)
+            #newSum = T.dot(r[n], h_n)
+            newSum = hidden_sums[ p[n] ] + T.dot(r[n], h_n)
             newSums = T.set_subtensor( hidden_sums[ p[n] ], newSum)
             # update cost
             rr , updates = theano.scan(
@@ -180,6 +181,9 @@ class DependencyRNN:
         #update gradients from total_cost_and_grad[1:]
         self.gradient_descent([i/total_nodes for i in total_cost_and_grad[1:]])
 
+        print total_nodes, total_cost_and_grad[0]/total_nodes, total_cost_and_grad[0]
+        if total_nodes == 0.0:
+            print "Wrong division"
         return total_cost_and_grad[0]/total_nodes
 
     def reset_weights(self):
