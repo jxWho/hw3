@@ -72,6 +72,10 @@ class DependencyRNN:
             
         self.f = normalized_tanh
 
+
+        def helperFunction(x_z, x_c, h_n):
+            return T.maximum(0, 1 - T.dot(x_c, h_n) + T.dot(x_z, h_n))
+
         #need to calculate both the input to its parent node and the error at this step
         def recurrence(n, hidden_states, hidden_sums, cost, x, r, p, wrong_ans, corr_ans):
             '''
@@ -96,31 +100,35 @@ class DependencyRNN:
             you need to return the updates to hidden_states, hidden_sums, and cost
             (in that order)
             '''
-            h_n = self.f( T.dot(self.Wv, x[n]) + self.b + hidden_sums )
-            T.as_tensor_variable(h_n)
-            newStates = T.set_subtensor( hidden_states[n:], h_n )
+            print corr_ans.shape[0], corr_ans.shape[1]
+            print wrong_ans.shape[0], wrong_ans.shape[1]
+            print wrong_ans
 
-            new_sum = 0
-            T.as_tensor_variable( new_sum )
+            h_n = self.f( T.dot(self.Wv, x[n]) + self.b + hidden_sums[n] )
+            #T.as_tensor_variable(h_n)
+            newStates = T.set_subtensor( hidden_states[n], h_n )
+
+            #T.as_tensor_variable( new_sum )
             new_sum = hidden_sums[p[n]] + T.dot(self.Wr[n], h_n)
-            newSums = T.set_subtensor( hidden_sums[p[n]:], new_sum )
+            newSums = T.set_subtensor( hidden_sums[p[n]], new_sum )
             # update cost
-            x_c = corr_ans[n]
-            wrong_answers = wrong_ans
-            result, updates = theano.scan(
-                    fn=lambda x_z, prior_result, h_n, x_c: prior_result + T.maximum(0.0 , 1 - T.dot(x_c, h_n) + T.dot(x_z, h_n)),
-                    non_sequences = [h_n, x_c],
-                    sequences = [wrong_answers],
-                    outputs_info = np.float64(0.0)
+            x_z = T.ones_like(corr_ans)
+            x_c = T.ivector('x_c')
+            h_h = T.ivector('h_h')
+
+            rr , updates = theano.scan(
+                    fn=helperFunction,
+                    sequences=x_z,
+                    non_sequences=[x_c, h_h],
+                    outputs_info=None
                     )
-            final_result = result[-1]
-            temp_function = theano.function(
-                            input=[wrong_answers, h_n, x_c],
-                            outputs=final_result,
-                            updates=updates)
-            cost = temp_function(wrong_ans, h_n, corr_ans[n])
-            return hidden_states, newSums, cost
-            #return newStates, newSums, cost
+            final_result = rr.sum()
+
+            temp_function = theano.function(inputs=[x_z, x_c, h_h], outputs=final_result)
+
+            new_cost = temp_function( wrong_ans, corr_ans, h_n )
+
+            return newStates, newSums, new_cost
             raise NotImplementedError
 
         idxs = T.ivector('idxs')
