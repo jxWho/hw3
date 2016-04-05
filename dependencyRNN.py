@@ -100,9 +100,6 @@ class DependencyRNN:
             you need to return the updates to hidden_states, hidden_sums, and cost
             (in that order)
             '''
-            print corr_ans.shape[0], corr_ans.shape[1]
-            print wrong_ans.shape[0], wrong_ans.shape[1]
-            print wrong_ans
 
             h_n = self.f( T.dot(self.Wv, x[n]) + self.b + hidden_sums[n] )
             #T.as_tensor_variable(h_n)
