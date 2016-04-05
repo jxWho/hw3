@@ -67,9 +67,8 @@ class DependencyRNN:
         def normalized_tanh(x):
             '''returns tanh(x) / ||tanh(x)||'''
             temp = T.tanh(x)
-            return temp / T.sqrt( temp * temp )
-            raise NotImplementedError
-            
+            return temp / T.sqrt( T.dot(temp, temp) )
+
         self.f = normalized_tanh
 
 
@@ -102,17 +101,12 @@ class DependencyRNN:
             '''
 
             h_n = self.f( T.dot(self.Wv, x[n]) + self.b + hidden_sums[n] )
-            #T.as_tensor_variable(h_n)
             newStates = T.set_subtensor( hidden_states[n], h_n )
 
-            #T.as_tensor_variable( new_sum )
-            new_sum = hidden_sums[p[n]] + T.dot(self.Wr[n], h_n)
-            newSums = T.set_subtensor( hidden_sums[p[n]], new_sum )
+            #newSum = hidden_sums[ p[n] ] + T.dot(self.Wr[n], h_n)
+            newSum = T.dot(r[n], h_n)
+            newSums = T.set_subtensor( hidden_sums[ p[n] ], newSum)
             # update cost
-            x_z = T.matrix()
-            x_c = T.ivector('x_c')
-            h_h = T.ivector('h_h')
-
             rr , updates = theano.scan(
                     fn=helperFunction,
                     sequences=wrong_ans,
@@ -121,12 +115,8 @@ class DependencyRNN:
                     )
             final_result = rr[-1]
 
-            #temp_function = theano.function(inputs=[wrong_ans, corr_ans, h_n], outputs=final_result)
 
-            # newCost = temp_function( wrong_ans, corr_ans, h_n )
-            return newStates, newSums, final_result
-
-            #raise NotImplementedError
+            return newStates, newSums, rr[-1]
 
         idxs = T.ivector('idxs')
         x = self.We[idxs]
