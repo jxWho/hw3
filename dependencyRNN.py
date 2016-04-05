@@ -73,8 +73,8 @@ class DependencyRNN:
         self.f = normalized_tanh
 
 
-        def helperFunction(x_z, x_c, h_n):
-            return T.maximum(0, 1 - T.dot(x_c, h_n) + T.dot(x_z, h_n))
+        def helperFunction(x_z, prior_result, x_c, h_n):
+            return prior_result + T.maximum(0, 1 - T.dot(x_c, h_n) + T.dot(x_z, h_n))
 
         #need to calculate both the input to its parent node and the error at this step
         def recurrence(n, hidden_states, hidden_sums, cost, x, r, p, wrong_ans, corr_ans):
@@ -117,9 +117,9 @@ class DependencyRNN:
                     fn=helperFunction,
                     sequences=wrong_ans,
                     non_sequences=[corr_ans, h_n],
-                    outputs_info=None
+                    outputs_info=T.as_tensor_variable(np.float64(0.0) )
                     )
-            final_result = rr.sum()
+            final_result = rr[-1]
 
             #temp_function = theano.function(inputs=[wrong_ans, corr_ans, h_n], outputs=final_result)
 
