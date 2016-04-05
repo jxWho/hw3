@@ -112,24 +112,24 @@ class DependencyRNN:
             new_sum = hidden_sums[p[n]] + T.dot(self.Wr[n], h_n)
             newSums = T.set_subtensor( hidden_sums[p[n]], new_sum )
             # update cost
-            x_z = T.ones_like(corr_ans)
+            x_z = T.matrix()
             x_c = T.ivector('x_c')
             h_h = T.ivector('h_h')
 
             rr , updates = theano.scan(
                     fn=helperFunction,
-                    sequences=x_z,
-                    non_sequences=[x_c, h_h],
+                    sequences=wrong_ans,
+                    non_sequences=[corr_ans, h_n],
                     outputs_info=None
                     )
             final_result = rr.sum()
 
-            temp_function = theano.function(inputs=[x_z, x_c, h_h], outputs=final_result)
+            #temp_function = theano.function(inputs=[wrong_ans, corr_ans, h_n], outputs=final_result)
 
-            new_cost = temp_function( wrong_ans, corr_ans, h_n )
+            # newCost = temp_function( wrong_ans, corr_ans, h_n )
+            return newStates, newSums, final_result
 
-            return newStates, newSums, new_cost
-            raise NotImplementedError
+            #raise NotImplementedError
 
         idxs = T.ivector('idxs')
         x = self.We[idxs]
