@@ -67,13 +67,13 @@ class DependencyRNN:
         def normalized_tanh(x):
             '''returns tanh(x) / ||tanh(x)||'''
             temp = T.tanh(x)
-            return temp // T.sqrt( T.dot(temp,temp) )
+            return T.tanh(x)/ T.sqrt( temp ** 2 )
 
         self.f = normalized_tanh
 
 
         def helperFunction(x_z, prior_result, x_c, h_n):
-            return prior_result + T.maximum(0.0, 1.0 - T.dot(x_c, h_n) + T.dot(x_z, h_n))
+            return prior_result + T.maximum(0.0, (1.0 - T.dot(x_c, h_n) ) + T.dot(x_z, h_n))
 
         #need to calculate both the input to its parent node and the error at this step
         def recurrence(n, hidden_states, hidden_sums, cost, x, r, p, wrong_ans, corr_ans):
@@ -104,20 +104,20 @@ class DependencyRNN:
             newStates = T.set_subtensor( hidden_states[n], h_n )
 
             #newSum = hidden_sums[ p[n] ] + T.dot(self.Wr[n], h_n)
-            #newSum = T.dot(r[n], h_n)
-            newSum = hidden_sums[ p[n] ] + T.dot(r[n], h_n)
+            newSum = T.dot(r[n], h_n)
+            #newSum = hidden_sums[ p[n] ] + T.dot(r[n], h_n)
             newSums = T.set_subtensor( hidden_sums[ p[n] ], newSum)
             # update cost
             rr , updates = theano.scan(
                     fn=helperFunction,
                     sequences=wrong_ans,
-                    non_sequences=[corr_ans, h_n],
-                    outputs_info=T.as_tensor_variable(np.asarray(0, theano.config.floatX) )
+                    outputs_info=T.as_tensor_variable(np.asarray(0, theano.config.floatX) ),
+                    non_sequences=[corr_ans, h_n]
                     )
-            final_result = rr[-1]
+            final_result = rr[-1] + cost
 
 
-            return newStates, newSums, rr[-1]
+            return newStates, newSums, final_result
 
         idxs = T.ivector('idxs')
         x = self.We[idxs]
@@ -181,7 +181,7 @@ class DependencyRNN:
         #update gradients from total_cost_and_grad[1:]
         self.gradient_descent([i/total_nodes for i in total_cost_and_grad[1:]])
 
-        print total_nodes, total_cost_and_grad[0]/total_nodes, total_cost_and_grad[0]
+        print total_nodes, total_cost_and_grad[0]/total_nodes, total_cost_and_grad[0], total_nodes
         if total_nodes == 0.0:
             print "Wrong division"
         return total_cost_and_grad[0]/total_nodes
