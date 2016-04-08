@@ -67,7 +67,7 @@ class DependencyRNN:
         def normalized_tanh(x):
             '''returns tanh(x) / ||tanh(x)||'''
             temp = T.tanh(x)
-            return T.tanh(x)/ T.sqrt( temp ** 2 )
+            return T.tanh(x)/ T.sqrt( (temp ** 2).sum() )
 
         self.f = normalized_tanh
 
