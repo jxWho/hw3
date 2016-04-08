@@ -55,7 +55,7 @@ class DependencyRNN:
         self.b = theano.shared(name='b',
                                value=np.zeros(d, dtype=theano.config.floatX))
         
-        self.params = [self.We, self.Wr, self.Wv, self.b]
+        self.params = [self.Wr, self.Wv, self.b]
         
         self.answer_idxs = np.array(answer_idxs, dtype=np.int32)
         self.ans_probabilities = np.ones(self.answer_idxs.shape[0])/(self.answer_idxs.shape[0]-1)
@@ -67,7 +67,7 @@ class DependencyRNN:
         def normalized_tanh(x):
             '''returns tanh(x) / ||tanh(x)||'''
             temp = T.tanh(x)
-            return T.tanh(x)/ T.sqrt( temp ** 2 )
+            return T.tanh(x)/ T.sqrt( (temp ** 2).sum() )
 
         self.f = normalized_tanh
 
