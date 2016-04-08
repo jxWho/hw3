@@ -181,9 +181,7 @@ class DependencyRNN:
         #update gradients from total_cost_and_grad[1:]
         self.gradient_descent([i/total_nodes for i in total_cost_and_grad[1:]])
 
-        print total_nodes, total_cost_and_grad[0]/total_nodes, total_cost_and_grad[0], total_nodes
-        if total_nodes == 0.0:
-            print "Wrong division"
+        #print total_nodes, total_cost_and_grad[0]/total_nodes, total_cost_and_grad[0], total_nodes
         return total_cost_and_grad[0]/total_nodes
 
     def reset_weights(self):
