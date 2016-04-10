@@ -4,7 +4,7 @@ import gensim
 from gensim.models import Word2Vec
 
 data="data/hist_split.json"
-fname="myModel"
+fname="myModel_test"
 
 with open( data ) as f:
     strings = f.read()
@@ -17,7 +17,7 @@ with open( data ) as f:
         for x in ttd:
             xx = x[0]
             if xx == None:
-                xx = ""
+                xx = u"None"
             temp.append( xx )
         sentences.append(temp)
 
